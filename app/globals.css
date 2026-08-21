@@ -1,0 +1,313 @@
+@import "tailwindcss";
+
+/* ==================================================================
+   THE SYSTEMATIC REFERENCE CHART
+   A dark, backlit reference chart. Density is organised by rule and
+   cell, never by whitespace. The categorical tint field is the point:
+   a full multi-hue palette, deliberately not a single accent on black.
+   ================================================================== */
+
+@theme {
+  /* Ground and structure. The world is black; panels are barely-there
+     lifts off it, because a live point cloud is always behind them. */
+  --color-ground: #000000;
+  --color-cell: #090c0e;
+  --color-cell-hi: #12181b;
+  --color-rule: #1b2328;
+  --color-rule-hi: #303e45;
+
+  /* Text */
+  --color-ink: #f4f8f9;
+  --color-ink-hi: #ffffff;
+  --color-ink-2: #adbcc4;
+  --color-ink-3: #86999f;
+
+  /* Categorical tint field. Each value carries exactly one meaning at a
+     time; the property selector decides which. Never decorative. */
+  --color-cat-cyan: #5cb2e8;
+  --color-cat-amber: #efab45;
+  --color-cat-violet: #a695f5;
+  --color-cat-teal: #3cc0b2;
+  --color-cat-rose: #f0839a;
+
+  --font-display: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-data: var(--font-azeret), ui-monospace, SFMono-Regular, monospace;
+
+  /* Type ramp. Display ceiling is 6rem; every size on the page comes from
+     here, so the scale is a system rather than a habit. */
+  --text-display: clamp(2.35rem, 6.2vw, 5.25rem);
+  --text-close: clamp(1.75rem, 3.6vw, 3rem);
+  --text-beat: clamp(1.5rem, 2.8vw, 2.25rem);
+  --text-lead: clamp(1.25rem, 2.2vw, 1.875rem);
+  --text-symbol: clamp(1.5rem, 2.6vw, 2.1rem);
+  --text-headline: 1.75rem;
+  --text-metric-lg: 1.5rem;
+  --text-title: 1.375rem;
+  --text-title-sm: 1.25rem;
+  --text-title-xs: 1.125rem;
+  --text-metric-sm: 1.0625rem;
+  --text-body-lg: 1rem;
+  --text-body: 0.9375rem;
+  --text-body-sm: 0.875rem;
+  --text-meta: 0.8125rem;
+
+  /* One shared clock. Every state channel reads from these. */
+  --clock: 460ms;
+  --clock-fast: 200ms;
+  --clock-feedback: 130ms;
+  /* Stagger step for the scan. Seven cells x 38ms = 266ms, inside the cap. */
+  --clock-step: 38ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------- base ----------
+   These live in @layer base on purpose: unlayered element rules outrank
+   Tailwind's layered utilities, which would make `a { color: inherit }`
+   silently beat every text-colour class on every link. */
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+    /* Themed browser surfaces: these ship with UA defaults otherwise. */
+    scrollbar-color: var(--color-rule-hi) var(--color-ground);
+    scrollbar-width: thin;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-display);
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    caret-color: var(--color-cat-amber);
+    overflow-x: hidden;
+  }
+
+  a {
+    color: inherit;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+    text-underline-offset: 0.22em;
+    text-decoration-thickness: 1px;
+  }
+}
+
+::selection {
+  background-color: var(--color-cat-amber);
+  color: var(--color-ground);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-ground);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-rule);
+  border: 2px solid var(--color-ground);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-rule-hi);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cat-amber);
+  outline-offset: 2px;
+}
+
+/* ---------- chart primitives ---------- */
+
+/* Every number on this page is measurement, so every number is tabular. */
+.tnum {
+  font-family: var(--font-data);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+}
+
+/* Chart caption: the small ruled label that names a field inside a cell or
+   a column head. This is chart apparatus, not an eyebrow above a heading. */
+.cap {
+  font-family: var(--font-data);
+  font-size: 0.625rem;
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+/* Panel scrim. Not decoration: text has a moving point cloud behind it, and
+   this is the minimum that keeps body copy legible over it. */
+.scrim {
+  background-color: color-mix(in srgb, var(--color-cell) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+}
+
+.scrim-deep {
+  background-color: color-mix(in srgb, var(--color-ground) 82%, transparent);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Reading scrim for open sections. The cloud is at its brightest behind the
+   intro, so the type column gets its own ground while the artifact stays
+   visible beside it. Specific effect, not decoration. */
+.read-left::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    var(--color-ground) 0%,
+    color-mix(in srgb, var(--color-ground) 92%, transparent) 34%,
+    color-mix(in srgb, var(--color-ground) 55%, transparent) 58%,
+    transparent 80%
+  );
+}
+
+/* Content rides above the fixed canvas. */
+.above {
+  position: relative;
+  z-index: 1;
+}
+
+/* Hatched fill: marks a slot that is deliberately awaiting real material,
+   so an unfilled plate reads as designed rather than broken. */
+.hatched {
+  background-image: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--color-rule) 70%, transparent) 0 1px,
+    transparent 1px 9px
+  );
+}
+
+/* ---------- the authored motion ----------
+   One rehearsed idea: this is an instrument, so it TAKES A READING. Changing
+   what the chart measures sweeps a scan across the row, each cell re-reading
+   in turn; the marker rail then travels to sit under whatever you selected,
+   physically linking the index to the record below it.
+
+   Brightness carries rank the way a large-type index does — but only ever in
+   the tint and rule channels. Text is never faded, because faded text is
+   unreadable text. ---------- */
+
+/* A cell re-reading: the symbol wipes back in rather than fading, so the
+   change reads as a redraw instead of a dissolve. */
+@keyframes scan-read {
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0.35;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+/* The tint bar draws from its leading edge as the new reading lands. */
+@keyframes bar-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The record panel wipes up into place, keyed to the cell you chose. */
+@keyframes wipe-up {
+  from {
+    clip-path: inset(28% 0 0 0);
+    opacity: 0;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+/* Masthead entrance: type rises out of its own baseline, one line at a time. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.anim-scan {
+  animation: scan-read var(--clock) var(--ease-out-expo) both;
+  animation-delay: var(--step-delay, 0ms);
+}
+
+.anim-bar {
+  animation: bar-draw var(--clock) var(--ease-out-expo) both;
+  animation-delay: var(--step-delay, 0ms);
+  transform-origin: left center;
+}
+
+.anim-record {
+  animation: wipe-up 520ms var(--ease-out-expo) both;
+}
+
+.anim-fade-up {
+  animation: fade-up 540ms var(--ease-out-expo) both;
+  animation-delay: var(--step-delay, 0ms);
+}
+
+/* The marker rail. Travels to sit beneath the selected cell — the spatial
+   link between the index and the record it opens. */
+.marker-rail {
+  transform: translateX(var(--rail-x, 0px));
+  width: var(--rail-w, 0px);
+  transition:
+    transform var(--clock) var(--ease-out-expo),
+    width var(--clock) var(--ease-out-expo),
+    background-color var(--clock-fast) linear;
+}
+
+/* Reduced motion: strip travel, wipe and stagger; keep the colour and state
+   transitions, because those are the feedback that confirms an action. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .anim-scan,
+  .anim-bar,
+  .anim-record,
+  .anim-fade-up {
+    animation: none !important;
+    clip-path: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .marker-rail {
+    transition: background-color var(--clock-fast) linear;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: var(--clock-fast) !important;
+    scroll-behavior: auto !important;
+  }
+}
