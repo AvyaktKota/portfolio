@@ -179,6 +179,7 @@ export default function Stage() {
       { anchor: "positions", formation: ambient },
       { anchor: "projects", formation: ambient },
       { anchor: "toolkit", formation: ambient },
+      { anchor: "resume", formation: ambient },
       { anchor: "contact", formation: ambient },
     ],
     [mark, picture, boxes],

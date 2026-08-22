@@ -6,6 +6,7 @@ import Intro from "@/components/Intro";
 import Nav from "@/components/Nav";
 import Positions from "@/components/Positions";
 import Projects from "@/components/Projects";
+import Resume from "@/components/Resume";
 import Stage from "@/components/Stage";
 import Toolkit from "@/components/Toolkit";
 
@@ -57,6 +58,7 @@ export default function Home() {
           <Positions />
           <Projects />
           <Toolkit />
+          <Resume />
         </main>
         <Contact />
       </div>

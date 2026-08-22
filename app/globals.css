@@ -311,3 +311,64 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Print: the page becomes the resume and nothing else.
+
+   Everything above the resume is screen furniture — a fixed WebGL canvas, a
+   scroll-driven beat sequence, a nav that only exists once you have left the
+   hero. None of it survives a page break, so print keeps exactly one section
+   and re-grounds the palette, because the site's ground is pure black. This
+   is what makes Cmd+P a usable substitute for a hosted PDF. */
+@media print {
+  :root {
+    --color-ground: #ffffff;
+    --color-cell: #ffffff;
+    --color-cell-hi: #ffffff;
+    --color-rule: #c8ccce;
+    --color-rule-hi: #9aa0a3;
+    --color-ink: #000000;
+    --color-ink-hi: #000000;
+    --color-ink-2: #23292c;
+    --color-ink-3: #55605f;
+    --color-cat-amber: #7a4a00;
+  }
+
+  /* keep only .above > main > #resume; drop every sibling at each level */
+  body > *:not(.above),
+  .above > *:not(main),
+  main > *:not(#resume) {
+    display: none !important;
+  }
+
+  /* the scrims exist to hold type off a live point field; on paper they are
+     a blur filter over nothing */
+  .scrim,
+  .scrim-deep {
+    background-color: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  #resume {
+    border-top: 0 !important;
+  }
+
+  #resume > div {
+    max-width: none;
+    padding: 0;
+  }
+
+  /* a row is a unit: never split a role from its bullets across a page */
+  article,
+  dl > div {
+    break-inside: avoid;
+  }
+
+  h3 {
+    break-after: avoid;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+}

@@ -25,6 +25,8 @@ export const person = {
   place: "La Jolla, CA",
   enrolled: "Aug 2025 — Present",
   enrolledStart: "2025-08",
+  /** The full degree span, as a resume states it. */
+  educationSpan: "Aug 2025 — Jun 2028",
   graduation: "Expected June 2028",
   email: "akotcherelakota@ucsd.edu",
   github: "https://github.com/AvyaktKota",
@@ -348,5 +350,6 @@ export const sections = [
   { id: "positions", label: "Positions" },
   { id: "projects", label: "Projects" },
   { id: "toolkit", label: "Toolkit" },
+  { id: "resume", label: "Resume" },
   { id: "contact", label: "Contact" },
 ] as const;
